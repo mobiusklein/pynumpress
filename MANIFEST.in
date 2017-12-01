@@ -1,0 +1,4 @@
+recursive-include pynumpress *.pyx
+recursive-include pynumpress *.pxd
+recursive-include pynumpress *.cpp
+recursive-include pynumpress *.hpp
