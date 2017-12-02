@@ -6,6 +6,9 @@ import numpy as np
 
 extra_compile_args = []
 if platform.system().lower() == 'windows':
+    # This may fail if compiled on Windows with a compiler
+    # that doesn't provide a cl.exe compatability frontend
+    # like mingw
     extra_compile_args = ['/EHsc']
 
 
