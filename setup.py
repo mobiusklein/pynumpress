@@ -2,8 +2,10 @@ import os
 import platform
 from setuptools import setup, Extension, find_packages
 
-import numpy as np
-
+try:
+    import numpy as np
+except:
+    print('Setup.py requires numpy.\nPlease run:\n\tpip install numpy')
 extra_compile_args = []
 if platform.system().lower() == 'windows':
     # This may fail if compiled on Windows with a compiler
