@@ -1,12 +1,14 @@
 import os
 import platform
 from setuptools import setup, Extension, find_packages
+import pip
 
 try:
     import numpy as np
-except:
-    print('Setup.py requires numpy.\nPlease run:\n\tpip install numpy')
-    exit(1)
+except ImportError:
+    pip.main(['install', 'numpy'])
+    import numpy as np
+
 extra_compile_args = []
 if platform.system().lower() == 'windows':
     # This may fail if compiled on Windows with a compiler
@@ -14,6 +16,10 @@ if platform.system().lower() == 'windows':
     # like mingw
     extra_compile_args = ['/EHsc']
 
+try:
+    from Cython.Build import cythonize
+except:
+    pip.main(['install', 'cython'])
 
 try:
     from Cython.Build import cythonize
