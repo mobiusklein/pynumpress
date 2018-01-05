@@ -43,7 +43,7 @@ except ImportError:
 setup(
     name="pynumpress",
     packages=find_packages(),
-    version='0.0.2',
+    version='0.0.3',
     install_requires=['numpy'],
     include_dirs=[np.get_include()],
     ext_modules=ext_modules)
