@@ -36,12 +36,39 @@ import numpy as np
 cimport numpy as np
 
 
+np.import_array()
+
 ctypedef cython.floating floating_t
 
 
-cpdef double optimal_linear_fixed_point(np.ndarray[floating_t] data):
+ctypedef fused numeric_collection:
+    np.ndarray
+    list
+    tuple
+    object
+
+
+cdef object double_dtype = np.float64
+
+
+cdef np.ndarray[double] coerce_data(numeric_collection data):
+    cdef np.ndarray npdata
+    if numeric_collection is object:
+        return np.array(list(data), dtype=np.float64)
+    elif numeric_collection is list or numeric_collection is tuple:
+        return np.array(data, dtype=np.float64)
+    elif numeric_collection is np.ndarray:
+        npdata = data
+        if npdata.dtype != double_dtype:
+            return npdata.astype(double_dtype)
+        else:
+            return npdata
+
+
+cpdef double optimal_linear_fixed_point(numeric_collection pdata):
     """
     """
+    cdef np.ndarray[double] data = coerce_data(pdata)
     dataSize = data.size
     cdef libcpp_vector[double] c_data = data
 
@@ -49,9 +76,8 @@ cpdef double optimal_linear_fixed_point(np.ndarray[floating_t] data):
 
     return result
 
-cpdef double optimal_slof_fixed_point(np.ndarray[floating_t] data):
-    """
-    """
+cpdef double optimal_slof_fixed_point(numeric_collection pdata):
+    cdef np.ndarray[double] data = coerce_data(pdata)
     dataSize = data.size
     cdef libcpp_vector[double] c_data = data
     cdef double result = _optimalSlofFixedPoint( &c_data[0], dataSize)
@@ -60,12 +86,21 @@ cpdef double optimal_slof_fixed_point(np.ndarray[floating_t] data):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-def encode_linear(np.ndarray[floating_t] _data, double fp):
-    cdef np.ndarray[double] data
-    if floating_t is not double:
-        data = _data.astype('double')
-    else:
-        data = _data
+def encode_linear(numeric_collection _data, double fp):
+    '''
+    Encodes the doubles in data by first using a 
+      - lossy conversion to a 4 byte 5 decimal fixed point representation
+      - storing the residuals from a linear prediction after first two values
+      - encoding by encodeInt (see above) 
+
+    The resulting binary is maximally 8 + dataSize * 5 bytes, but much less if the 
+    data is reasonably smooth on the first order.
+
+    This encoding is suitable for typical m/z or retention time binary arrays. 
+
+    On a test set, the encoding was empirically show to be accurate to at least 0.002 ppm.
+    '''
+    cdef np.ndarray[double] data = coerce_data(_data)
     cdef size_t dataSize = data.size
     cdef unsigned char * res_view = <unsigned char *>malloc(data.size * 5 + 8)
     cdef size_t res_len
@@ -77,6 +112,11 @@ def encode_linear(np.ndarray[floating_t] _data, double fp):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 def decode_linear(np.ndarray[unsigned char] data):
+    '''
+    Decodes data encoded by encode_linear. 
+    
+    Result array guaranteed to be shorter or equal to (|data| - 8) * 2
+    '''
     cdef libcpp_vector[unsigned char] c_data = data
     cdef libcpp_vector[double] c_result
     cdef np.ndarray[double, ndim=1] result
@@ -92,12 +132,16 @@ def decode_linear(np.ndarray[unsigned char] data):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-def encode_slof(np.ndarray[floating_t] _data, double fp):
-    cdef np.ndarray[double] data
-    if floating_t is not double:
-        data = _data.astype('double')
-    else:
-        data = _data
+def encode_slof(numeric_collection _data, double fp):
+    """
+    Encodes ion counts by taking the natural logarithm, and storing a
+    fixed point representation of this. This is calculated as
+
+    unsigned short fp = log(d + 1) * fixedPoint + 0.5
+    
+    The result array is exactly |data| * 2 + 8 bytes long
+    """
+    cdef np.ndarray[double] data = coerce_data(_data)
     cdef unsigned char * res_view = <unsigned char *>malloc(data.size * 2 + 8)
     cdef size_t res_len
     cdef size_t dataSize = data.size
@@ -105,6 +149,11 @@ def encode_slof(np.ndarray[floating_t] _data, double fp):
     return np.frombuffer(res_view[:res_len], dtype=np.uint8) # 3.20
 
 def decode_slof(data):
+    '''
+    Decodes data encoded by encode_slof
+
+    The return will include exactly (|data| - 8) / 2 doubles.
+    '''
     cdef libcpp_vector[unsigned char] c_data = data
     cdef libcpp_vector[double] c_result
     cdef np.ndarray[double, ndim=1] result
@@ -120,12 +169,17 @@ def decode_slof(data):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-def encode_pic(np.ndarray[floating_t] _data):
-    cdef np.ndarray[double] data
-    if floating_t is not double:
-        data = _data.astype('double')
-    else:
-        data = _data
+def encode_pic(numeric_collection _data):
+    '''
+    Encodes ion counts by simply rounding to the nearest 4 byte integer, 
+    and compressing each integer with encodeInt. 
+    
+    The handleable range is therefore 0 -> 4294967294.
+    
+    The resulting binary is maximally dataSize * 5 bytes, but much less if the 
+    data is close to 0 on average.
+    '''
+    cdef np.ndarray[double] data = coerce_data(_data)
     cdef unsigned char * res_view = <unsigned char *>malloc(data.size * 5)
     cdef size_t res_len
     cdef size_t dataSize = data.size
@@ -133,6 +187,11 @@ def encode_pic(np.ndarray[floating_t] _data):
     return np.frombuffer(res_view[:res_len], dtype=np.uint8) # 3.20
 
 def decode_pic(data):
+    '''
+    Decodes data encoded by encode_pic
+
+    Result array guaranteed to be shorter of equal to |data| * 2
+    '''
     cdef libcpp_vector[unsigned char] c_data = data
     cdef libcpp_vector[double] c_result
     cdef np.ndarray[double, ndim=1] result
