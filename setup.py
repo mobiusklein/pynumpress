@@ -44,5 +44,6 @@ setup(
     name="pynumpress",
     packages=find_packages(),
     version='0.0.1',
+    install_requires=['numpy'],
     include_dirs=[np.get_include()],
     ext_modules=ext_modules)
