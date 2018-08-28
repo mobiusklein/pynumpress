@@ -1,12 +1,15 @@
 import os
 import platform
 from setuptools import setup, Extension, find_packages
-import pip
+try:
+    from pip import main as pipmain
+except:
+    from pip._internal import main as pipmain
 
 try:
     import numpy as np
 except ImportError:
-    pip.main(['install', 'numpy'])
+    pipmain(['install', 'numpy'])
     import numpy as np
 
 extra_compile_args = []
@@ -19,7 +22,7 @@ if platform.system().lower() == 'windows':
 try:
     from Cython.Build import cythonize
 except:
-    pip.main(['install', 'cython'])
+    pipmain(['install', 'cython'])
 
 try:
     from Cython.Build import cythonize
