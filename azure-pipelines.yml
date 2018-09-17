@@ -32,6 +32,7 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
+      pip install .
       pip install pytest
       pytest pynumpress/test/ --junitxml=junit/test-results.xml
     displayName: 'pytest'
