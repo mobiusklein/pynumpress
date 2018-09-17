@@ -59,5 +59,10 @@ jobs:
   - script: |
         python -m pip install --upgrade pip && pip install -r requirements.txt
         pip install Cython
-        python setup.py sdist
+        python setup.py sdist bdist_wheel
     displayName: 'Build sdist'
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish artifact: dist'
+    inputs:
+      pathtoPublish: 'dist'
+      artifactName: 'dist'
