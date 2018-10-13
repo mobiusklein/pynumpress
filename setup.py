@@ -1,8 +1,16 @@
 import os
 import platform
 from setuptools import setup, Extension, find_packages
+try:
+    from pip import main as pipmain
+except:
+    from pip._internal import main as pipmain
 
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    pipmain(['install', 'numpy'])
+    import numpy as np
 
 extra_compile_args = []
 if platform.system().lower() == 'windows':
@@ -11,6 +19,10 @@ if platform.system().lower() == 'windows':
     # like mingw
     extra_compile_args = ['/EHsc']
 
+try:
+    from Cython.Build import cythonize
+except:
+    pipmain(['install', 'cython'])
 
 try:
     from Cython.Build import cythonize
