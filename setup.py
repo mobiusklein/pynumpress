@@ -43,7 +43,26 @@ except ImportError:
 setup(
     name="pynumpress",
     packages=find_packages(),
-    version='0.0.3',
+    version='0.0.4',
     install_requires=['numpy'],
     include_dirs=[np.get_include()],
-    ext_modules=ext_modules)
+    ext_modules=ext_modules,
+    license="Apache 2",
+    keywords="mass spectrometry compression",
+    description=("A more pythonic wrapper around the MSNumpress library "
+                 "for mass spectrometry numerical data compression"),
+    author='Joshua Klein, Manuel Koester, Christian Fuefzan',
+    author_email='jaklein@bu.edu',
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Topic :: Utilities",
+        "License :: OSI Approved :: Apache Software License",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "Topic :: Scientific/Engineering :: Chemistry",
+        "Intended Audience :: Science/Research",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Cython",
+        "Programming Language :: C++",
+        "Operating System :: OS Independent"
+    ])
