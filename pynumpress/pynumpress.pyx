@@ -48,7 +48,15 @@ ctypedef fused numeric_collection:
     object
 
 
+ctypedef fused byte_array:
+    np.ndarray
+    bytes
+    bytearray
+    object
+
+
 cdef object double_dtype = np.float64
+cdef object uint8_dtype = np.uint8
 
 
 cdef np.ndarray[double] coerce_data(numeric_collection data):
@@ -64,6 +72,19 @@ cdef np.ndarray[double] coerce_data(numeric_collection data):
         else:
             return npdata
 
+
+cdef np.ndarray[unsigned char] coerce_data_bytes(byte_array data):
+    cdef np.ndarray npdata
+    if byte_array is object:
+        return np.array(bytearray(data), dtype=uint8_dtype)
+    elif byte_array is bytes or byte_array is bytearray:
+        return np.frombuffer(data, dtype=uint8_dtype)
+    else:
+        npdata = data
+        if npdata.dtype != uint8_dtype:
+            return npdata.astype(uint8_dtype)
+        else:
+            return npdata
 
 cpdef double optimal_linear_fixed_point(numeric_collection pdata):
     """
@@ -88,15 +109,15 @@ cpdef double optimal_slof_fixed_point(numeric_collection pdata):
 @cython.nonecheck(False)
 def encode_linear(numeric_collection _data, double fp):
     '''
-    Encodes the doubles in data by first using a 
+    Encodes the doubles in data by first using a
       - lossy conversion to a 4 byte 5 decimal fixed point representation
       - storing the residuals from a linear prediction after first two values
-      - encoding by encodeInt (see above) 
+      - encoding by encodeInt (see above)
 
-    The resulting binary is maximally 8 + dataSize * 5 bytes, but much less if the 
+    The resulting binary is maximally 8 + dataSize * 5 bytes, but much less if the
     data is reasonably smooth on the first order.
 
-    This encoding is suitable for typical m/z or retention time binary arrays. 
+    This encoding is suitable for typical m/z or retention time binary arrays.
 
     On a test set, the encoding was empirically show to be accurate to at least 0.002 ppm.
     '''
@@ -111,13 +132,13 @@ def encode_linear(numeric_collection _data, double fp):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-def decode_linear(np.ndarray[unsigned char] data):
+def decode_linear(byte_array data):
     '''
-    Decodes data encoded by encode_linear. 
-    
+    Decodes data encoded by encode_linear.
+
     Result array guaranteed to be shorter or equal to (|data| - 8) * 2
     '''
-    cdef libcpp_vector[unsigned char] c_data = data
+    cdef libcpp_vector[unsigned char] c_data = coerce_data_bytes(data)
     cdef libcpp_vector[double] c_result
     cdef np.ndarray[double, ndim=1] result
     cdef size_t i
@@ -138,7 +159,7 @@ def encode_slof(numeric_collection _data, double fp):
     fixed point representation of this. This is calculated as
 
     unsigned short fp = log(d + 1) * fixedPoint + 0.5
-    
+
     The result array is exactly |data| * 2 + 8 bytes long
     """
     cdef np.ndarray[double] data = coerce_data(_data)
@@ -148,13 +169,13 @@ def encode_slof(numeric_collection _data, double fp):
     res_len = _encodeSlof(&data[0], dataSize, &res_view[0], fp)
     return np.frombuffer(res_view[:res_len], dtype=np.uint8) # 3.20
 
-def decode_slof(data):
+def decode_slof(byte_array data):
     '''
     Decodes data encoded by encode_slof
 
     The return will include exactly (|data| - 8) / 2 doubles.
     '''
-    cdef libcpp_vector[unsigned char] c_data = data
+    cdef libcpp_vector[unsigned char] c_data = coerce_data_bytes(data)
     cdef libcpp_vector[double] c_result
     cdef np.ndarray[double, ndim=1] result
     cdef size_t i
@@ -171,12 +192,12 @@ def decode_slof(data):
 @cython.nonecheck(False)
 def encode_pic(numeric_collection _data):
     '''
-    Encodes ion counts by simply rounding to the nearest 4 byte integer, 
-    and compressing each integer with encodeInt. 
-    
+    Encodes ion counts by simply rounding to the nearest 4 byte integer,
+    and compressing each integer with encodeInt.
+
     The handleable range is therefore 0 -> 4294967294.
-    
-    The resulting binary is maximally dataSize * 5 bytes, but much less if the 
+
+    The resulting binary is maximally dataSize * 5 bytes, but much less if the
     data is close to 0 on average.
     '''
     cdef np.ndarray[double] data = coerce_data(_data)
@@ -186,13 +207,13 @@ def encode_pic(numeric_collection _data):
     res_len = _encodePic(&data[0], dataSize, &res_view[0])
     return np.frombuffer(res_view[:res_len], dtype=np.uint8) # 3.20
 
-def decode_pic(data):
+def decode_pic(byte_array data):
     '''
     Decodes data encoded by encode_pic
 
     Result array guaranteed to be shorter of equal to |data| * 2
     '''
-    cdef libcpp_vector[unsigned char] c_data = data
+    cdef libcpp_vector[unsigned char] c_data = coerce_data_bytes(data)
     cdef libcpp_vector[double] c_result
     cdef np.ndarray[double, ndim=1] result
     cdef size_t i
