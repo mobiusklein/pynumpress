@@ -1,2 +1,7 @@
-*.pyc 
+*.pyc
+*.pyd
 pynumpress/pynumpress.cpp
+pynumpress/pynumpress.c
+pynumpress/pynumpress.html
+build/
+dist/

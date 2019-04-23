@@ -143,6 +143,14 @@ def decode_linear(byte_array data):
     cdef np.ndarray[double, ndim=1] result
     cdef size_t i
 
+    i = c_data.size()
+    if i == 8:
+        return np.array([], dtype=float)
+    elif i < 12:
+        raise ValueError("Corrupt input data: not enough bytes to read fixed point!")
+    elif i < 16:
+        raise ValueError("Corrupt input data: not enough bytes to read second value!")
+
     _decodeLinear(c_data, c_result)
 
     result = np.empty(c_result.size(), dtype=float)
@@ -179,6 +187,12 @@ def decode_slof(byte_array data):
     cdef libcpp_vector[double] c_result
     cdef np.ndarray[double, ndim=1] result
     cdef size_t i
+
+    i = c_data.size()
+    if i == 8:
+        return np.array([], dtype=float)
+    elif i < 8:
+        raise ValueError("Corrupt input data: not enough bytes to read fixed point!")
 
     _decodeSlof(c_data, c_result)
 
@@ -218,6 +232,9 @@ def decode_pic(byte_array data):
     cdef np.ndarray[double, ndim=1] result
     cdef size_t i
 
+    i = c_data.size()
+    if i == 0:
+        return np.array([], dtype=float)
     _decodePic(c_data, c_result)
 
     result = np.empty(c_result.size(), dtype=float)
