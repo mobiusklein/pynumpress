@@ -1,0 +1,16 @@
+language: python
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
+cache: pip
+# command to install dependencies
+install:
+  - pip install --upgrade pip setuptools wheel
+  - pip install Cython --install-option="--no-cython-compile"
+  - pip install pytest -U
+  - pip install --only-binary=numpy numpy
+  - python setup.py develop
+  # - pip install -r requirements.txt
+# command to run tests
+script: make test

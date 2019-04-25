@@ -5,3 +5,5 @@ pynumpress/pynumpress.c
 pynumpress/pynumpress.html
 build/
 dist/
+*egg-info
+.vscode
