@@ -59,10 +59,30 @@ cdef object double_dtype = np.float64
 cdef object uint8_dtype = np.uint8
 
 
+IF int == long:
+    DEF PY_VERSION = 3
+ELSE:
+    DEF PY_VERSION = 2
+IF UNAME_SYSNAME != "Windows" and PY_VERSION == 2:
+    DEF NEEDS_RUNTIME_PATCH = 1
+ELSE:
+    DEF NEEDS_RUNTIME_PATCH = 0
+
+
 cdef np.ndarray[double] coerce_data(numeric_collection data):
     cdef np.ndarray npdata
     if numeric_collection is object:
-        return np.array(list(data), dtype=np.float64)
+        IF PY_VERSION == 2 and UNAME_SYSNAME != "Windows":
+            if isinstance(data, np.ndarray):
+                npdata = data
+                if npdata.dtype != double_dtype:
+                    return npdata.astype(double_dtype)
+                else:
+                    return npdata
+            else:
+                return np.array(list(data), dtype=np.float64)
+        ELSE:
+            return np.array(list(data), dtype=np.float64)
     elif numeric_collection is list or numeric_collection is tuple:
         return np.array(data, dtype=np.float64)
     elif numeric_collection is np.ndarray:
