@@ -41,23 +41,6 @@ np.import_array()
 ctypedef cython.floating floating_t
 
 
-ctypedef fused numeric_collection:
-    np.ndarray
-    list
-    tuple
-    object
-
-
-ctypedef fused byte_array:
-    np.ndarray
-    bytes
-    bytearray
-    object
-
-
-cdef object double_dtype = np.float64
-cdef object uint8_dtype = np.uint8
-
 
 IF int == long:
     DEF PY_VERSION = 3
@@ -69,10 +52,40 @@ ELSE:
     DEF NEEDS_RUNTIME_PATCH = 0
 
 
+IF NEEDS_RUNTIME_PATCH:
+    ctypedef fused numeric_collection:
+        list
+        tuple
+        object
+ELSE:
+    ctypedef fused numeric_collection:
+        np.ndarray
+        list
+        tuple
+        object
+
+IF NEEDS_RUNTIME_PATCH:
+    ctypedef fused byte_array:
+        bytes
+        bytearray
+        object
+
+ELSE:
+    ctypedef fused byte_array:
+        np.ndarray
+        bytes
+        bytearray
+        object
+
+
+cdef object double_dtype = np.float64
+cdef object uint8_dtype = np.uint8
+
+
 cdef np.ndarray[double] coerce_data(numeric_collection data):
     cdef np.ndarray npdata
     if numeric_collection is object:
-        IF PY_VERSION == 2 and UNAME_SYSNAME != "Windows":
+        IF NEEDS_RUNTIME_PATCH:
             if isinstance(data, np.ndarray):
                 npdata = data
                 if npdata.dtype != double_dtype:
@@ -96,7 +109,17 @@ cdef np.ndarray[double] coerce_data(numeric_collection data):
 cdef np.ndarray[unsigned char] coerce_data_bytes(byte_array data):
     cdef np.ndarray npdata
     if byte_array is object:
-        return np.array(bytearray(data), dtype=uint8_dtype)
+        IF NEEDS_RUNTIME_PATCH:
+            if isinstance(data, np.ndarray):
+                npdata = data
+                if npdata.dtype != uint8_dtype:
+                    return npdata.astype(uint8_dtype)
+                else:
+                    return npdata
+            else:
+                return np.array(bytearray(data), dtype=uint8_dtype)
+        ELSE:
+            return np.array(bytearray(data), dtype=uint8_dtype)
     elif byte_array is bytes or byte_array is bytearray:
         return np.frombuffer(data, dtype=uint8_dtype)
     else:
