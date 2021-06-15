@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install pytest-U
+        pip install pytest -U
         pip install Cython --install-option="--no-cython-compile"
         pip install --only-binary=numpy numpy -U
         pip install -v -e .
