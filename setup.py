@@ -1,3 +1,4 @@
+import re
 import os
 import platform
 from setuptools import setup, Extension, find_packages
@@ -43,12 +44,13 @@ with open("pynumpress/version.py") as version_file:
     version = None
     for line in version_file.readlines():
         if "version = " in line:
-            version = line.split(" = ")[1].replace("\"", "").strip()
-            print("Version is: %r" % (version,))
-            break
+            match = re.search(r"version\s*=\s*['\"]([^'\"]+)['\"]", line.strip())
+            if match:
+                version = match.group(1)
+                print("Version is: %r" % (version,))
+                break
     else:
         print("Cannot determine version")
-
 
 setup(
     name="pynumpress",
