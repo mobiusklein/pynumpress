@@ -39,11 +39,21 @@ except ImportError:
         )
     ]
 
+with open("pynumpress/version.py") as version_file:
+    version = None
+    for line in version_file.readlines():
+        if "version = " in line:
+            version = line.split(" = ")[1].replace("\"", "").strip()
+            print("Version is: %r" % (version,))
+            break
+    else:
+        print("Cannot determine version")
+
 
 setup(
     name="pynumpress",
     packages=find_packages(),
-    version='0.0.4',
+    version=version,
     install_requires=['numpy'],
     include_dirs=[np.get_include()],
     ext_modules=ext_modules,

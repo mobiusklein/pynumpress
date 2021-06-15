@@ -26,6 +26,8 @@ from .pynumpress import (
     encode_pic,
     decode_pic)
 
+from .version import version as __version__
+
 __all__ = [
     "optimal_linear_fixed_point",
     "optimal_slof_fixed_point",
