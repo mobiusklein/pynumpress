@@ -21,14 +21,14 @@ limitations under the License.
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector as libcpp_vector
 from cython.operator cimport dereference as deref, preincrement as inc, address as address
-from MSNumpress cimport encodeLinear as _encodeLinear
-from MSNumpress cimport decodeLinear as _decodeLinear
-from MSNumpress cimport optimalLinearFixedPoint as _optimalLinearFixedPoint
-from MSNumpress cimport encodeSlof as _encodeSlof
-from MSNumpress cimport decodeSlof as _decodeSlof
-from MSNumpress cimport optimalSlofFixedPoint as _optimalSlofFixedPoint
-from MSNumpress cimport encodePic as _encodePic
-from MSNumpress cimport decodePic as _decodePic
+from pynumpress.MSNumpress cimport encodeLinear as _encodeLinear
+from pynumpress.MSNumpress cimport decodeLinear as _decodeLinear
+from pynumpress.MSNumpress cimport optimalLinearFixedPoint as _optimalLinearFixedPoint
+from pynumpress.MSNumpress cimport encodeSlof as _encodeSlof
+from pynumpress.MSNumpress cimport decodeSlof as _decodeSlof
+from pynumpress.MSNumpress cimport optimalSlofFixedPoint as _optimalSlofFixedPoint
+from pynumpress.MSNumpress cimport encodePic as _encodePic
+from pynumpress.MSNumpress cimport decodePic as _decodePic
 
 import cython
 
