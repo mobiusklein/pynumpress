@@ -2,7 +2,7 @@
 """
 	setup.py
 	roest@imsb.biol.ethz.ch
- 
+
 	Copyright 2013 Hannes Roest
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,31 +23,31 @@ from libcpp.vector cimport vector as libcpp_vector
 cdef extern from "MSNumpress.hpp" namespace "ms::numpress::MSNumpress":
 
     double optimalLinearFixedPoint(
-        double *data, 
-        size_t dataSize)
+        double *data,
+        size_t dataSize) nogil
 
     double optimalSlofFixedPoint(
-        double *data, 
-        size_t dataSize)
+        double *data,
+        size_t dataSize) nogil
 
     ##############################################
 
-    # void encodeLinear(libcpp_vector[ double] &data, 
+    # void encodeLinear(libcpp_vector[ double] &data,
     #     libcpp_vector[ unsigned char] &result,
     #     double fixedPoint)
 
     size_t encodeLinear(
-        const double *data, 
-        size_t dataSize, 
+        const double *data,
+        size_t dataSize,
         unsigned char *result,
         double fixedPoint
-    )
+    ) nogil
 
     #############################################
 
     void decodeLinear(
         libcpp_vector[unsigned char] &data,
-        libcpp_vector[double] &result)
+        libcpp_vector[double] &result) nogil
 
     # size_t decodeLinear(
     #     const unsigned char *data,
@@ -57,26 +57,26 @@ cdef extern from "MSNumpress.hpp" namespace "ms::numpress::MSNumpress":
 
     ###############################################
 
-    void encodeSlof(libcpp_vector[ double] &data, 
+    void encodeSlof(libcpp_vector[ double] &data,
         libcpp_vector[ unsigned char] &result,
-        double fixedPoint)
+        double fixedPoint) nogil
 
     size_t encodeSlof(
-        const double *data, 
-        size_t dataSize, 
+        const double *data,
+        size_t dataSize,
         unsigned char *result,
         double fixedPoint
-    )
+    ) nogil
 
     ###############################################
 
     void decodeSlof(
         libcpp_vector[unsigned char] &data,
-        libcpp_vector[double] &result)
+        libcpp_vector[double] &result) nogil
 
     # size_t decodeSlof(
-    #     const unsigned char *data, 
-    #     const size_t dataSize, 
+    #     const unsigned char *data,
+    #     const size_t dataSize,
     #     double *result
     # )
 
@@ -85,7 +85,7 @@ cdef extern from "MSNumpress.hpp" namespace "ms::numpress::MSNumpress":
     void decodePic(
         libcpp_vector[unsigned char] &data,
         libcpp_vector[double] &result
-    )
+    ) nogil
 
     # size_t decodePic(
     #     const unsigned char *data,
@@ -96,13 +96,13 @@ cdef extern from "MSNumpress.hpp" namespace "ms::numpress::MSNumpress":
     ###############################################
 
     void encodePic(
-        libcpp_vector[ double] &data, 
+        libcpp_vector[ double] &data,
         libcpp_vector[ unsigned char] &result
-    )
+    ) nogil
 
     size_t encodePic(
-        const double *data, 
-        size_t dataSize, 
+        const double *data,
+        size_t dataSize,
         unsigned char *result
-    )   
+    ) nogil
 

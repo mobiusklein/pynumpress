@@ -42,12 +42,12 @@ except ImportError:
 
 with open("pynumpress/version.py") as version_file:
     version = None
-    for line in version_file.readlines():
+    for line in version_file:
         if "version = " in line:
             match = re.search(r"version\s*=\s*['\"]([^'\"]+)['\"]", line.strip())
             if match:
                 version = match.group(1)
-                print("Version is: %r" % (version,))
+                print(f"Version is: {version!r}")
                 break
     else:
         print("Cannot determine version")
@@ -56,25 +56,30 @@ setup(
     name="pynumpress",
     packages=find_packages(),
     version=version,
-    install_requires=['numpy'],
+    install_requires=["numpy"],
     include_dirs=[np.get_include()],
     ext_modules=ext_modules,
-    license="Apache 2",
+    license="Apache-2.0",
     keywords="mass spectrometry compression",
-    description=("A more pythonic wrapper around the MSNumpress library "
-                 "for mass spectrometry numerical data compression"),
-    author='Joshua Klein, Manuel Koester, Christian Fuefzan',
-    author_email='jaklein@bu.edu',
+    description=(
+        "A more pythonic wrapper around the MSNumpress library "
+        "for mass spectrometry numerical data compression"
+    ),
+    author="Joshua Klein, Manuel Koester, Christian Fuefzan",
+    author_email="jaklein@bu.edu",
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Topic :: Utilities",
-        "License :: OSI Approved :: Apache Software License",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Topic :: Scientific/Engineering :: Chemistry",
         "Intended Audience :: Science/Research",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Programming Language :: Cython",
         "Programming Language :: C++",
-        "Operating System :: OS Independent"
-    ])
+        "Operating System :: OS Independent",
+    ],
+)

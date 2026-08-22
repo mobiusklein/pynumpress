@@ -1,8 +1,8 @@
 import os
 
-from pynumpress import pynumpress
 import numpy as np
 
+from pynumpress import pynumpress
 
 data_file = os.path.join(os.path.dirname(__file__), "data", "data.npz")
 
@@ -15,7 +15,7 @@ def test_slof():
     decoded = pynumpress.decode_slof(encoded)
     mask = data_array != 0
     assert data_array.size == decoded.size
-    assert np.all(np.abs((data_array[mask] - decoded[mask])) / decoded[mask] < 5e-4)
+    assert np.all(np.abs(data_array[mask] - decoded[mask]) / decoded[mask] < 5e-4)
 
 
 def test_pic():
@@ -23,7 +23,7 @@ def test_pic():
     decoded = pynumpress.decode_pic(encoded)
     mask = data_array != 0
     assert data_array.size == decoded.size
-    assert np.all(np.abs((data_array[mask] - decoded[mask])) / decoded[mask] < 1.0)
+    assert np.all(np.abs(data_array[mask] - decoded[mask]) / decoded[mask] < 1.0)
 
 
 def test_linear():
@@ -35,4 +35,4 @@ def test_linear():
     decoded = pynumpress.decode_linear(encoded)
     mask = data_array != 0
     assert data_array.size == decoded.size
-    assert np.all(np.abs((data_array[mask] - decoded[mask])) / decoded[mask] < 1e-5)
+    assert np.all(np.abs(data_array[mask] - decoded[mask]) / decoded[mask] < 1e-5)

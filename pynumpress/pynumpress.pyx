@@ -19,6 +19,7 @@ limitations under the License.
 
 
 from libc.stdlib cimport malloc, free
+from libc.string cimport memcpy
 from libcpp.vector cimport vector as libcpp_vector
 from cython.operator cimport dereference as deref, preincrement as inc, address as address
 from pynumpress.MSNumpress cimport encodeLinear as _encodeLinear
@@ -42,40 +43,22 @@ ctypedef cython.floating floating_t
 
 
 
-IF int == long:
-    DEF PY_VERSION = 3
-ELSE:
-    DEF PY_VERSION = 2
-IF UNAME_SYSNAME != "Windows" and PY_VERSION == 2:
-    DEF NEEDS_RUNTIME_PATCH = 1
-ELSE:
-    DEF NEEDS_RUNTIME_PATCH = 0
+DEF PY_VERSION = 3
+DEF NEEDS_RUNTIME_PATCH = 0
 
 
-IF NEEDS_RUNTIME_PATCH:
-    ctypedef fused numeric_collection:
-        list
-        tuple
-        object
-ELSE:
-    ctypedef fused numeric_collection:
-        np.ndarray
-        list
-        tuple
-        object
+ctypedef fused numeric_collection:
+    np.ndarray
+    list
+    tuple
+    object
 
-IF NEEDS_RUNTIME_PATCH:
-    ctypedef fused byte_array:
-        bytes
-        bytearray
-        object
 
-ELSE:
-    ctypedef fused byte_array:
-        np.ndarray
-        bytes
-        bytearray
-        object
+ctypedef fused byte_array:
+    np.ndarray
+    bytes
+    bytearray
+    object
 
 
 cdef object double_dtype = np.float64
@@ -85,17 +68,7 @@ cdef object uint8_dtype = np.uint8
 cdef np.ndarray[double] coerce_data(numeric_collection data):
     cdef np.ndarray npdata
     if numeric_collection is object:
-        IF NEEDS_RUNTIME_PATCH:
-            if isinstance(data, np.ndarray):
-                npdata = data
-                if npdata.dtype != double_dtype:
-                    return npdata.astype(double_dtype)
-                else:
-                    return npdata
-            else:
-                return np.array(list(data), dtype=np.float64)
-        ELSE:
-            return np.array(list(data), dtype=np.float64)
+        return np.array(list(data), dtype=np.float64)
     elif numeric_collection is list or numeric_collection is tuple:
         return np.array(data, dtype=np.float64)
     elif numeric_collection is np.ndarray:
@@ -109,17 +82,7 @@ cdef np.ndarray[double] coerce_data(numeric_collection data):
 cdef np.ndarray[unsigned char] coerce_data_bytes(byte_array data):
     cdef np.ndarray npdata
     if byte_array is object:
-        IF NEEDS_RUNTIME_PATCH:
-            if isinstance(data, np.ndarray):
-                npdata = data
-                if npdata.dtype != uint8_dtype:
-                    return npdata.astype(uint8_dtype)
-                else:
-                    return npdata
-            else:
-                return np.array(bytearray(data), dtype=uint8_dtype)
-        ELSE:
-            return np.array(bytearray(data), dtype=uint8_dtype)
+        return np.array(bytearray(data), dtype=uint8_dtype)
     elif byte_array is bytes or byte_array is bytearray:
         return np.frombuffer(data, dtype=uint8_dtype)
     else:
@@ -132,19 +95,23 @@ cdef np.ndarray[unsigned char] coerce_data_bytes(byte_array data):
 cpdef double optimal_linear_fixed_point(numeric_collection pdata):
     """
     """
+    cdef double result = 0
     cdef np.ndarray[double] data = coerce_data(pdata)
     dataSize = data.size
     cdef libcpp_vector[double] c_data = data
 
-    cdef double result = _optimalLinearFixedPoint( &c_data[0], dataSize)
+    with nogil:
+        result = _optimalLinearFixedPoint( &c_data[0], dataSize)
 
     return result
 
 cpdef double optimal_slof_fixed_point(numeric_collection pdata):
+    cdef double result = 0
     cdef np.ndarray[double] data = coerce_data(pdata)
     dataSize = data.size
     cdef libcpp_vector[double] c_data = data
-    cdef double result = _optimalSlofFixedPoint( &c_data[0], dataSize)
+    with nogil:
+        result = _optimalSlofFixedPoint( &c_data[0], dataSize)
     return result
 
 @cython.boundscheck(False)
@@ -168,8 +135,8 @@ def encode_linear(numeric_collection _data, double fp):
     cdef size_t dataSize = data.size
     cdef unsigned char * res_view = <unsigned char *>malloc(data.size * 5 + 8)
     cdef size_t res_len
-
-    res_len = _encodeLinear(&data[0], dataSize, &res_view[0], fp)
+    with nogil:
+        res_len = _encodeLinear(&data[0], dataSize, &res_view[0], fp)
     return np.frombuffer(res_view[:res_len], dtype=np.uint8) # 3.20
 
 @cython.boundscheck(False)
@@ -183,7 +150,7 @@ def decode_linear(byte_array data):
     '''
     cdef libcpp_vector[unsigned char] c_data = coerce_data_bytes(data)
     cdef libcpp_vector[double] c_result
-    cdef np.ndarray[double, ndim=1] result
+    cdef np.ndarray[double, ndim=1, mode='c'] result
     cdef size_t i
 
     i = c_data.size()
@@ -194,11 +161,13 @@ def decode_linear(byte_array data):
     elif i < 16:
         raise ValueError("Corrupt input data: not enough bytes to read second value!")
 
-    _decodeLinear(c_data, c_result)
+    with nogil:
+        _decodeLinear(c_data, c_result)
 
     result = np.empty(c_result.size(), dtype=float)
-    for i in range(c_result.size()):
-        result[i] = c_result[i]
+
+    with nogil:
+        memcpy(&result[0], c_result.const_data(), c_result.size() * sizeof(double))
     return result
 
 @cython.boundscheck(False)
@@ -217,7 +186,8 @@ def encode_slof(numeric_collection _data, double fp):
     cdef unsigned char * res_view = <unsigned char *>malloc(data.size * 2 + 8)
     cdef size_t res_len
     cdef size_t dataSize = data.size
-    res_len = _encodeSlof(&data[0], dataSize, &res_view[0], fp)
+    with nogil:
+        res_len = _encodeSlof(&data[0], dataSize, &res_view[0], fp)
     return np.frombuffer(res_view[:res_len], dtype=np.uint8) # 3.20
 
 def decode_slof(byte_array data):
@@ -228,7 +198,7 @@ def decode_slof(byte_array data):
     '''
     cdef libcpp_vector[unsigned char] c_data = coerce_data_bytes(data)
     cdef libcpp_vector[double] c_result
-    cdef np.ndarray[double, ndim=1] result
+    cdef np.ndarray[double, ndim=1, mode="c"] result
     cdef size_t i
 
     i = c_data.size()
@@ -237,11 +207,13 @@ def decode_slof(byte_array data):
     elif i < 8:
         raise ValueError("Corrupt input data: not enough bytes to read fixed point!")
 
-    _decodeSlof(c_data, c_result)
+    with nogil:
+        _decodeSlof(c_data, c_result)
 
     result = np.empty(c_result.size(), dtype=float)
-    for i in range(c_result.size()):
-        result[i] = c_result[i]
+
+    with nogil:
+        memcpy(&result[0], c_result.const_data(), c_result.size() * sizeof(double))
     return result
 
 @cython.boundscheck(False)
@@ -261,7 +233,8 @@ def encode_pic(numeric_collection _data):
     cdef unsigned char * res_view = <unsigned char *>malloc(data.size * 5)
     cdef size_t res_len
     cdef size_t dataSize = data.size
-    res_len = _encodePic(&data[0], dataSize, &res_view[0])
+    with nogil:
+        res_len = _encodePic(&data[0], dataSize, &res_view[0])
     return np.frombuffer(res_view[:res_len], dtype=np.uint8) # 3.20
 
 def decode_pic(byte_array data):
@@ -272,15 +245,19 @@ def decode_pic(byte_array data):
     '''
     cdef libcpp_vector[unsigned char] c_data = coerce_data_bytes(data)
     cdef libcpp_vector[double] c_result
-    cdef np.ndarray[double, ndim=1] result
+    cdef np.ndarray[double, ndim=1, mode="c"] result
     cdef size_t i
 
     i = c_data.size()
     if i == 0:
         return np.array([], dtype=float)
-    _decodePic(c_data, c_result)
+
+    with nogil:
+        _decodePic(c_data, c_result)
 
     result = np.empty(c_result.size(), dtype=float)
-    for i in range(c_result.size()):
-        result[i] = c_result[i]
+
+    with nogil:
+        memcpy(&result[0], c_result.const_data(), c_result.size() * sizeof(double))
+
     return result

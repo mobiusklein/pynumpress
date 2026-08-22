@@ -17,24 +17,25 @@ limitations under the License.
 
 
 from .pynumpress import (
+    decode_linear,
+    decode_pic,
+    decode_slof,
+    encode_linear,
+    encode_pic,
+    encode_slof,
     optimal_linear_fixed_point,
     optimal_slof_fixed_point,
-    encode_linear,
-    decode_linear,
-    encode_slof,
-    decode_slof,
-    encode_pic,
-    decode_pic)
-
+)
 from .version import version as __version__
 
 __all__ = [
+    "__version__",
+    "decode_linear",
+    "decode_pic",
+    "decode_slof",
+    "encode_linear",
+    "encode_pic",
+    "encode_slof",
     "optimal_linear_fixed_point",
     "optimal_slof_fixed_point",
-    "encode_linear",
-    "decode_linear",
-    "encode_slof",
-    "decode_slof",
-    "encode_pic",
-    "decode_pic"
 ]
