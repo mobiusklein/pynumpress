@@ -52,6 +52,12 @@ with open("pynumpress/version.py") as version_file:
     else:
         print("Cannot determine version")
 
+try:
+    with open("README.rst") as fh:
+        long_descr_rst = fh.read()
+except OSError:
+    long_descr_rst = "A thin, more convenient wrapper around MSNumpress"
+
 setup(
     name="pynumpress",
     packages=find_packages(),
@@ -65,6 +71,7 @@ setup(
         "A more pythonic wrapper around the MSNumpress library "
         "for mass spectrometry numerical data compression"
     ),
+    long_description=long_descr_rst,
     author="Joshua Klein, Manuel Koester, Christian Fuefzan",
     author_email="jaklein@bu.edu",
     classifiers=[

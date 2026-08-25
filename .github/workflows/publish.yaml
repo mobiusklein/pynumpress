@@ -47,7 +47,7 @@ jobs:
     - name: Upload Distributions
       uses: actions/upload-artifact@v6
       with:
-        name: dist
+        name: dist-${matrix.os}
         path: |
           dist/*.whl
           dist/*.tar.gz
@@ -68,7 +68,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: actions/download-artifact@v6
         with:
-          name: dist
           path: dist/
       - name: Install dependencies
         run: |
