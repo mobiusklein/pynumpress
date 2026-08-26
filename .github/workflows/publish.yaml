@@ -48,7 +48,7 @@ jobs:
       uses: actions/upload-artifact@v6
       id: artifact-upload-step
       with:
-        name: dist-${matrix.os}
+        name: dist-${{ matrix.os }}
         path: |
           dist/*.whl
           dist/*.tar.gz
