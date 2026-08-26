@@ -46,6 +46,7 @@ jobs:
         CIBW_ARCHS: "auto"
     - name: Upload Distributions
       uses: actions/upload-artifact@v6
+      id: artifact-upload-step
       with:
         name: dist-${matrix.os}
         path: |
@@ -69,6 +70,8 @@ jobs:
       - uses: actions/download-artifact@v6
         with:
           path: dist/
+          merge-multiple: true
+          pattern: dist-*
       - name: Install dependencies
         run: |
           python -m pip install -U pip setuptools wheel twine
